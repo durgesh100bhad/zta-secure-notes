@@ -1,0 +1,15 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.zta.zta_backend.exception;
+
+/**
+ *
+ * @author hcdc
+ */
+public class AccessDeniedException extends RuntimeException {
+    public AccessDeniedException(String message) {
+        super(message);
+    }
+}
