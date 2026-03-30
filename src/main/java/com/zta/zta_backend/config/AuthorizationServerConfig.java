@@ -28,7 +28,7 @@ import org.springframework.security.oauth2.server.authorization.settings.TokenSe
 @Configuration
 public class AuthorizationServerConfig {
 
-   // 🔥 Authorization Server Security (HIGH PRIORITY)
+   // Authorization Server Security (HIGH PRIORITY)
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -44,7 +44,7 @@ public class AuthorizationServerConfig {
         return http.build();
     }
 
-    // 🔥 Client Registration
+    // Client Registration
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
 

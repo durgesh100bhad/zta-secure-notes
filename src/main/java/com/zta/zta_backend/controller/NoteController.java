@@ -27,12 +27,7 @@ public class NoteController {
 
     private final NoteService noteService;
     
-//    //  Create Note
-//    @PostMapping
-//    public NoteResponse createNote(@Valid @RequestBody CreateNoteRequest request) {
-//        return noteService.createNote(request, CURRENT_USER);
-//    }
-    
+
     @PreAuthorize("hasAuthority('SCOPE_notes.write')")
     @PostMapping
     public NoteResponse createNote(
@@ -44,11 +39,7 @@ public class NoteController {
     return noteService.createNote(request, userEmail);
 }
 
-//    //  Get all notes of user
-//    @GetMapping
-//    public List<NoteResponse> getUserNotes() {
-//        return noteService.getUserNotes(CURRENT_USER);
-//    }
+
     
     
     @PreAuthorize("hasAuthority('SCOPE_notes.read')")
@@ -56,18 +47,9 @@ public class NoteController {
     public List<NoteResponse> getUserNotes(Authentication authentication) {
 
             Jwt jwt = (Jwt) authentication.getPrincipal();
-
-//        System.out.println("Claims: " + jwt.getClaims());
-//        System.out.println("Principal: " + authentication.getName());
-//        System.out.println("Authorities: " + authentication.getAuthorities());
         return noteService.getUserNotes(authentication.getName());
     }
 
-//    //  Get note by ID (with ownership check 🔥)
-//    @GetMapping("/{id}")
-//    public NoteResponse getNoteById(@PathVariable Long id) {
-//        return noteService.getNoteById(id, CURRENT_USER);
-//    }
     
     @PreAuthorize("hasAuthority('SCOPE_notes.read')")
     @GetMapping("/{id}")
