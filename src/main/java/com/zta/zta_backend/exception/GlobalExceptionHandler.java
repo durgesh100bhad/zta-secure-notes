@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.*;
 import com.zta.zta_backend.dto.ErrorResponse;
 import java.time.LocalDateTime;
@@ -36,6 +37,24 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
+
+    
+    
+    @ExceptionHandler(AuthorizationDeniedException.class)
+public ResponseEntity<ErrorResponse> handleAuthorizationDenied(
+        AuthorizationDeniedException ex,
+        HttpServletRequest request) {
+
+    ErrorResponse error = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.FORBIDDEN.value())
+            .error("Access Denied")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+    return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+}
 
     // Access Denied
     @ExceptionHandler(AccessDeniedException.class)
@@ -78,7 +97,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    // 🔴 Generic Exception
+    // ? Generic Exception
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(
             Exception ex,

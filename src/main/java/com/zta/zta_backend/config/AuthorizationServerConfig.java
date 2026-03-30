@@ -22,7 +22,8 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.*;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 
 @Configuration
 public class AuthorizationServerConfig {
@@ -54,6 +55,8 @@ public class AuthorizationServerConfig {
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .scope("notes.read")
                 .scope("notes.write")
+                .clientSettings(ClientSettings.builder().build())
+            .tokenSettings(TokenSettings.builder().build())
                 .build();
 
         return new InMemoryRegisteredClientRepository(client);

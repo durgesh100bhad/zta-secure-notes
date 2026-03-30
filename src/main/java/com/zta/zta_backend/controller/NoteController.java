@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @RestController
 @RequestMapping("/api/v1/notes")
@@ -31,6 +33,7 @@ public class NoteController {
 //        return noteService.createNote(request, CURRENT_USER);
 //    }
     
+    @PreAuthorize("hasAuthority('SCOPE_notes.write')")
     @PostMapping
     public NoteResponse createNote(
         @Valid @RequestBody CreateNoteRequest request,
@@ -47,8 +50,16 @@ public class NoteController {
 //        return noteService.getUserNotes(CURRENT_USER);
 //    }
     
+    
+    @PreAuthorize("hasAuthority('SCOPE_notes.read')")
     @GetMapping
     public List<NoteResponse> getUserNotes(Authentication authentication) {
+
+            Jwt jwt = (Jwt) authentication.getPrincipal();
+
+//        System.out.println("Claims: " + jwt.getClaims());
+//        System.out.println("Principal: " + authentication.getName());
+//        System.out.println("Authorities: " + authentication.getAuthorities());
         return noteService.getUserNotes(authentication.getName());
     }
 
@@ -58,6 +69,7 @@ public class NoteController {
 //        return noteService.getNoteById(id, CURRENT_USER);
 //    }
     
+    @PreAuthorize("hasAuthority('SCOPE_notes.read')")
     @GetMapping("/{id}")
     public NoteResponse getNoteById(@PathVariable Long id, Authentication authentication) {
         return noteService.getNoteById(id, authentication.getName());

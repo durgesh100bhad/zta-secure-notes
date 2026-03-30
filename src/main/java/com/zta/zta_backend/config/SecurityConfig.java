@@ -8,10 +8,18 @@ package com.zta.zta_backend.config;
  *
  * @author hcdc
  */
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.util.Arrays;
+import java.util.List;
+
 
 @Configuration
 public class SecurityConfig {
@@ -22,7 +30,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/oauth2/**").permitAll() // allow token endpoint
+                .requestMatchers("/oauth2/**").permitAll() 
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
@@ -31,4 +39,25 @@ public class SecurityConfig {
 
         return http.build();
     }
+    
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+
+            List<String> scopes = jwt.getClaimAsStringList("scope");
+
+            if (scopes == null) {
+                return List.of();
+            }
+
+            return scopes.stream()
+                    .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope))
+                    .collect(Collectors.toList());
+        });
+
+    return converter;
+}
 }
