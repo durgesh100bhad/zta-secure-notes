@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 @RequestMapping("/api/v1/notes")
@@ -55,5 +56,31 @@ public class NoteController {
     @GetMapping("/{id}")
     public NoteResponse getNoteById(@PathVariable Long id, Authentication authentication) {
         return noteService.getNoteById(id, authentication.getName());
+    }
+    
+    
+    @PreAuthorize("hasAuthority('SCOPE_notes.write')")
+    @PutMapping("/{id}")
+    public NoteResponse updateNotes(@PathVariable Long id, 
+                @RequestBody CreateNoteRequest request, 
+                Authentication authentication){
+        String userEmail = authentication.getName();
+        
+        return noteService.updateNote(id,request, userEmail);
+    }
+    
+    
+    
+
+    @PreAuthorize("hasAuthority('SCOPE_notes.write')")
+    @DeleteMapping("/{id}")
+    public String deleteNote(@PathVariable Long id,
+                             Authentication authentication) {
+
+        String userEmail = authentication.getName();
+
+        noteService.deleteNote(id, userEmail);
+
+        return "Deleted successfully";
     }
 }

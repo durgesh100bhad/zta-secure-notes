@@ -21,4 +21,8 @@ public interface NoteService {
     List<NoteResponse> getUserNotes(String userEmail);
 
     NoteResponse getNoteById(Long noteId, String userEmail);
+    
+    NoteResponse updateNote(Long id, CreateNoteRequest request, String userEmail);
+
+    void deleteNote(Long id, String userEmail);
 }

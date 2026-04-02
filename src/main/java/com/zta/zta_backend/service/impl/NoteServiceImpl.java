@@ -72,6 +72,37 @@ public class NoteServiceImpl implements NoteService {
         return mapToResponse(note);
     }
 
+    @Override
+    public NoteResponse updateNote(Long id, CreateNoteRequest request, String userEmail) {
+
+        Note note = noteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Note not found"));
+
+        if (!note.getUser().getEmail().equals(userEmail)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        note.setTitle(request.getTitle());
+        note.setContent(request.getContent());
+
+        noteRepository.save(note);
+
+        return mapToResponse(note);
+    }
+    
+    
+    @Override
+    public void deleteNote(Long id, String userEmail) {
+
+        Note note = noteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Note not found"));
+
+        if (!note.getUser().getEmail().equals(userEmail)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        noteRepository.delete(note);
+    }
     //  Mapping method
     private NoteResponse mapToResponse(Note note) {
         return NoteResponse.builder()
