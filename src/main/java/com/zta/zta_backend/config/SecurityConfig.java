@@ -39,7 +39,9 @@ private HmacFilter hmacFilter;
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/oauth2/**","/auth/**").permitAll() 
+                .requestMatchers("/oauth2/**",
+                        "/auth/**",
+                        "/api/v1/clients/**").permitAll() 
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2

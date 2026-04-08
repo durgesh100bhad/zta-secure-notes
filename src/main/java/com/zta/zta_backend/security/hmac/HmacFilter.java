@@ -10,8 +10,10 @@ package com.zta.zta_backend.security.hmac;
  */
 import com.zta.zta_backend.entity.ClientApp;
 import com.zta.zta_backend.repository.ClientAppRepository;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -34,47 +36,80 @@ public class HmacFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws ServletException, IOException {
 
-        //  skip login & oauth
-        if (request.getRequestURI().startsWith("/auth")
-                || request.getRequestURI().startsWith("/oauth2")) {
+        String path = request.getRequestURI();
+
+        // Skip public endpoints
+        if (path.startsWith("/auth")
+                || path.startsWith("/oauth2")
+                || path.startsWith("/api/v1/clients")) {   //  allow client registration
             chain.doFilter(request, response);
             return;
         }
 
-        CachedBodyHttpServletRequest wrapped = new CachedBodyHttpServletRequest(request);
+        // Wrap request for reading body multiple times
+        CachedBodyHttpServletRequest wrapped =
+                new CachedBodyHttpServletRequest(request);
 
         String clientId = request.getHeader("X-Client-Id");
         String timestamp = request.getHeader("X-Timestamp");
         String signature = request.getHeader("X-Signature");
 
+        // 1. Validate headers
         if (clientId == null || timestamp == null || signature == null) {
-            response.sendError(401, "Missing HMAC headers");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                    "Missing HMAC headers");
             return;
         }
 
+        //  2. Validate timestamp (anti-replay)
         long now = Instant.now().getEpochSecond();
-        long reqTime = Long.parseLong(timestamp);
+        long reqTime;
+
+        try {
+            reqTime = Long.parseLong(timestamp);
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid timestamp format");
+            return;
+        }
 
         if (Math.abs(now - reqTime) > 300) {
-            response.sendError(401, "Expired request");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                    "Request expired (possible replay attack)");
             return;
         }
 
+        //  Fetch client from DB
         ClientApp client = repo.findByClientId(clientId).orElse(null);
 
-        if (client == null || !client.isActive()) {
-            response.sendError(401, "Invalid client");
+        if (client == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                    "Client not registered");
             return;
         }
 
+        if (!client.isActive()) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                    "Client inactive");
+            return;
+        }
+
+        //  4. Rebuild signature
         String data = SignatureBuilder.build(wrapped, timestamp);
-        String expected = HmacUtil.generate(data, client.getClientSecret());
+        String expectedSignature =
+                HmacUtil.generate(data, client.getClientSecret());
 
-        if (!MessageDigest.isEqual(expected.getBytes(), signature.getBytes())) {
-            response.sendError(401, "Invalid signature");
+        //  5. Constant-time comparison (secure)
+        if (!MessageDigest.isEqual(
+                expectedSignature.getBytes(),
+                signature.getBytes())) {
+
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid signature");
             return;
         }
 
+        //  6. All checks passed
         chain.doFilter(wrapped, response);
     }
 }
